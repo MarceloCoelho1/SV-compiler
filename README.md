@@ -32,7 +32,7 @@ output example: ```java
         int num = 10;
     }
 }
-```
+                ```
 
 ## Limitations
 1. Limited Language Support: The SV language supports only basic features and is not suitable for practical use. It was designed solely for educational purposes.
