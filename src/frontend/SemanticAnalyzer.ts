@@ -27,10 +27,10 @@ export default class SemanticAnalyzer {
                 this.analyzeBinaryExpression(statement as BinaryExpr);
             } else if (statement.kind === "_return") {
                 this.analyzeReturnStatement(statement as _return);
-            } // Adicione mais casos conforme necessário para outros tipos de nó.
+            } 
         }
 
-        // Verifique se o último nó é uma operação binária e a resolva
+        
         if (this.ast.body.length > 0) {
             const lastStatement = this.ast.body[0];
             if (lastStatement.kind === "BinaryExpr") {
@@ -75,18 +75,18 @@ export default class SemanticAnalyzer {
         }
 
         if (expr.operator === '+') {
-            // Verifica se a operação de adição está sendo aplicada a números
+            
             if (expr.left.kind !== 'NumericLiteral' || expr.right.kind !== 'NumericLiteral') {
-                console.error('Operação de adição inválida: os dois lados da expressão devem ser números.');
+                console.error('Error: Is not a number.');
                 process.exit();
             } else {
                 let result: NumericLiteral = this.resolveBinaryExpr(expr.left, expr.right, expr.operator);
                 return result;
             }
         } else if (expr.operator === '*') {
-            // Verifica se a operação de multiplicação está sendo aplicada a números
+            
             if (expr.left.kind !== 'NumericLiteral' || expr.right.kind !== 'NumericLiteral') {
-                console.error('Operação de multiplicação inválida: os dois lados da expressão devem ser números.');
+                console.error('Error: Is not a number.');
                 process.exit();
             } else {
                 let result: NumericLiteral = this.resolveBinaryExpr(expr.left, expr.right, expr.operator);
@@ -94,7 +94,7 @@ export default class SemanticAnalyzer {
             }
         } else if(expr.operator === '-') {
             if (expr.left.kind !== 'NumericLiteral' || expr.right.kind !== 'NumericLiteral') {
-                console.error('Operação de Subtração inválida: os dois lados da expressão devem ser números.');
+                console.error('Error: Is not a number.');
                 process.exit();
             } else {
                 let result: NumericLiteral = this.resolveBinaryExpr(expr.left, expr.right, expr.operator);
@@ -103,7 +103,7 @@ export default class SemanticAnalyzer {
             
         } else if(expr.operator === '/') {
             if (expr.left.kind !== 'NumericLiteral' || expr.right.kind !== 'NumericLiteral') {
-                console.error('Operação de Divisão inválida: os dois lados da expressão devem ser números.');
+                console.error('Error: Is not a number.');
                 process.exit();
             } else {
                 let result: NumericLiteral = this.resolveBinaryExpr(expr.left, expr.right, expr.operator);
@@ -112,7 +112,7 @@ export default class SemanticAnalyzer {
         } else {
             return {} as NumericLiteral;
         }
-        // Adicione mais verificações para outros operadores, se necessário
+        
     }
 
 
@@ -155,22 +155,19 @@ export default class SemanticAnalyzer {
             }
             return identifierType;
         }
-        // Implemente mais casos para outros tipos de expressões, se necessário.
-        return TokenType.Identifier; // Tipo padrão para expressões desconhecidas.
+       
+        return TokenType.Identifier; 
     }
 
 
 
     private analyzeReturnStatement(statement: _return): void {
-        // Verifique se a declaração de retorno está dentro de uma função (adicione essa lógica conforme necessário).
+       
 
         if (statement.expression) {
             const returnType = this.getType(statement.expression);
 
-            // Implemente verificações para garantir que o tipo de retorno seja consistente com o tipo da função.
-            // Verifique também se o tipo da função é consistente com o contexto em que a declaração de retorno está.
-
-            // Exemplo simplificado:
+            
             if (returnType !== TokenType.Number) {
                 console.error(`Invalid return type.`);
                 process.exit(1);
