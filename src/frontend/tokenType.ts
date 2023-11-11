@@ -9,7 +9,11 @@ export enum TokenType  {
     Identifier,
     Number,
     Sv,
-    String
+    String,
+    OpenCurlyBrace,
+    CloseCurlyBrace,
+    Function,
+    Comma
 }
 
 export type Token = {
