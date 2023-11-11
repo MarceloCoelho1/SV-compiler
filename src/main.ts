@@ -23,7 +23,7 @@ function readFile(pathOfFile: string):string {
         process.exit()
     }
 
-    
+
 }
 
 
@@ -37,19 +37,20 @@ async function main() {
     const fileContent = readFile(pathOfFIle)
     const tokens = tokenize(fileContent)
     const program = parser.produceAST(tokens)
-    const programSemantic = new SemanticAnalyzer(program)
-    programSemantic.analyze()
-    const generator = new CodeGenerator()
-    let objectCode = generator.generateJavaCode(program)
-    
-    try {
-        fs.writeFileSync('./Main.java', objectCode)
-        console.log('Code generate with success!')
-    } catch (error) {
-        console.error(error)
-    }
-    
-    
+    console.log(JSON.stringify(program, null, 2))
+    // const programSemantic = new SemanticAnalyzer(program)
+    // programSemantic.analyze()
+    // const generator = new CodeGenerator()
+    // let objectCode = generator.generateJavaCode(program)
+
+    // try {
+    //     fs.writeFileSync('./Main.java', objectCode)
+    //     console.log('Code generate with success!')
+    // } catch (error) {
+    //     console.error(error)
+    // }
+
+
 
     rl.close();
 

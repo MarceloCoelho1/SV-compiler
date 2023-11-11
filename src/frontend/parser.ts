@@ -11,9 +11,15 @@ import {
     String,
     VariableDeclaration,
     _return,
+    Block,
+    FunctionDeclaration,
+    Parameter,
+    FunctionCall,
 } from "./ast";
 
 import { Token, TokenType } from "./tokenType";
+
+
 
 /**
  * Frontend for producing a valid AST from sourcode
@@ -72,6 +78,55 @@ export default class Parser {
         return program;
     }
 
+    private parse_block(): Block {
+        this.expect(TokenType.OpenCurlyBrace, "Expecting '{' to start a block.");
+        
+        const statements: Stmt[] = [];
+
+        // Parse statements inside the block
+        while (this.at().type !== TokenType.CloseCurlyBrace && this.not_eof()) {
+            statements.push(this.parse_stmt());
+        }
+
+        this.expect(TokenType.CloseCurlyBrace, "Expecting '}' to end a block.");
+
+        return {
+            kind: "Block",
+            statements,
+        };
+    }
+
+    private parse_function_declaration(): FunctionDeclaration {
+        this.expect(TokenType.Function, "Expecting 'function' keyword.");
+        
+        const identifier = this.parse_identifier();
+        this.expect(TokenType.OpenParen, "Expecting '(' after function identifier.");
+
+        const parameters: Parameter[] = [];
+        while (this.at().type === TokenType.Identifier) {
+            parameters.push({
+                kind: "Parameter",
+                identifier: this.parse_identifier(),
+            });
+            
+            if (this.at().type === TokenType.Comma) {
+                this.eat(); // Consome a vírgula, se houver mais parâmetros
+            }
+        }
+
+        this.expect(TokenType.CloseParen, "Expecting ')' after function parameters.");
+
+        const body = this.parse_block();
+
+        return {
+            kind: "FunctionDeclaration",
+            identifier,
+            parameters,
+            body,
+        };
+    }
+
+
     // Handle complex statement types
     private parse_stmt(): Stmt {
         // skip to parse_expr
@@ -105,6 +160,10 @@ export default class Parser {
             }
         } else if(this.at().type === TokenType.Semi) {
             return {kind: "Semicolon", symbol: this.eat().value} as Semicolon
+        } else if (this.at().type === TokenType.Function) {
+            return this.parse_function_declaration();
+        } else if (this.at().type === TokenType.Semi) {
+            return { kind: "Semicolon", symbol: this.eat().value } as Semicolon;
         }
         return this.parse_expr();
     }
@@ -159,6 +218,28 @@ export default class Parser {
         return left;
     }
 
+    private parse_function_call(identifier: Identifier): FunctionCall {
+        this.expect(TokenType.OpenParen, "Expecting '(' after function identifier.");
+    
+        const args: Expr[] = [];
+        
+        while (this.at().type !== TokenType.CloseParen) {
+            args.push(this.parse_expr());
+            
+            if (this.at().type === TokenType.Comma) {
+                this.eat(); // Consome a vírgula, se houver mais argumentos
+            }
+        }
+    
+        this.expect(TokenType.CloseParen, "Expecting ')' after function arguments.");
+    
+        return {
+            kind: "FunctionCall",
+            identifier,
+            arguments: args,
+        };
+    }
+    
     // Orders Of Prescidence
     // AdditiveExpr
     // MultiplicitaveExpr
@@ -172,7 +253,12 @@ export default class Parser {
         switch (tk) {
           // User-defined values.
           case TokenType.Identifier:
-            return { kind: "Identifier", symbol: this.eat().value } as Identifier;
+            const identifier = this.parse_identifier();
+
+            if (this.at().type === TokenType.OpenParen) {
+                return this.parse_function_call(identifier);
+            }
+            return identifier;
       
           // Constants and Numeric Constants
           case TokenType.Number:
@@ -191,6 +277,7 @@ export default class Parser {
             ); // Closing paren
             return value;
           }
+
       
           case TokenType._return: {
             this.eat(); // Eat the 'return' keyword

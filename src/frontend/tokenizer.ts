@@ -31,6 +31,10 @@ export default function tokenize(sourceCode: string): Token[] {
       tokens.push(token(src.shift(), TokenType.OpenParen));
     } else if (src[0] == ")") {
       tokens.push(token(src.shift(), TokenType.CloseParen));
+    } if (src[0] == "{") {
+      tokens.push(token(src.shift(), TokenType.OpenCurlyBrace));
+    } else if (src[0] == "}") {
+      tokens.push(token(src.shift(), TokenType.CloseCurlyBrace));
     } // HANDLE BINARY OPERATORS
     else if (src[0] == "+" || src[0] == "-" || src[0] == "*" || src[0] == "/") {
       tokens.push(token(src.shift(), TokenType.BinaryOperator));
@@ -39,6 +43,8 @@ export default function tokenize(sourceCode: string): Token[] {
       tokens.push(token(src.shift(), TokenType.Equals));
     } else if (src[0] == ';') {
       tokens.push(token(src.shift(), TokenType.Semi));
+    } else if (src[0] == ',') {
+      tokens.push(token(src.shift(), TokenType.Comma));
     }
     // HANDLE MULTICHARACTER KEYWORDS, TOKENS, IDENTIFIERS ETC...
     else {
@@ -51,10 +57,23 @@ export default function tokenize(sourceCode: string): Token[] {
 
         // append new numeric token.
         tokens.push(token(num, TokenType.Number));
+      } else if (src.join('').startsWith('function')) {
+        while (src.length > 0 && LETTER.test(src[0])) {
+          src.shift(); 
+        }
+        tokens.push(token('function', TokenType.Function));
       } else if (src[0] === "'") {
         let ident = "";
         src.shift();
         while (src.length > 0 && src[0] != "'") {
+          ident += src.shift();
+        }
+        src.shift()
+        tokens.push(token(ident, TokenType.String))
+      } else if (src[0] === '"') {
+        let ident = "";
+        src.shift();
+        while (src.length > 0 && src[0] != '"') {
           ident += src.shift();
         }
         src.shift()
@@ -66,7 +85,7 @@ export default function tokenize(sourceCode: string): Token[] {
         while (src.length > 0 && LETTER.test(src[0])) {
           ident += src.shift();
         }
-  
+
         // CHECK FOR RESERVED KEYWORDS
         const reserved = reservedKeyword(ident);
         // If value is not undefined then the identifier is
@@ -75,7 +94,7 @@ export default function tokenize(sourceCode: string): Token[] {
           tokens.push(token(ident, TokenType._return));
         } else if (reserved && ident === 'sv') {
           tokens.push(token(ident, TokenType.Sv))
-        } 
+        }
         else {
           tokens.push(token(ident, TokenType.Identifier));
         }
