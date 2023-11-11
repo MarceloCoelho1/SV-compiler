@@ -1,9 +1,3 @@
-// deno-lint-ignore-file no-empty-interface
-// https://github.com/tlaceby/guide-to-interpreters-series
-// -----------------------------------------------------------
-// --------------          AST TYPES        ------------------
-// ---     Defines the structure of our languages AST      ---
-// -----------------------------------------------------------
 
 export type NodeType =
   | "Program"
@@ -13,7 +7,11 @@ export type NodeType =
   | "_return"
   | "VariableDeclaration"
   | "String"
-  | "Semicolon";
+  | "Semicolon"
+  | "Block"
+  | "Parameter"
+  | "FunctionDeclaration"
+  | "FunctionCall";
 
 /**
  * Statements do not result in a value at runtime.
@@ -21,6 +19,8 @@ export type NodeType =
 export interface Stmt {
   kind: NodeType;
 }
+
+
 
 /**
  * Defines a block which contains many statements.
@@ -83,4 +83,27 @@ export interface String extends Stmt {
 export interface Semicolon extends Stmt {
   kind: "Semicolon";
   symbol: string
+}
+
+export interface Block extends Stmt {
+  kind: "Block";
+  statements: Stmt[];
+}
+
+export interface Parameter extends Expr {
+  kind: "Parameter";
+  identifier: Identifier;
+}
+
+export interface FunctionDeclaration extends Stmt {
+  kind: "FunctionDeclaration";
+  identifier: Identifier;
+  parameters: Parameter[];
+  body: Block;
+}
+
+export interface FunctionCall extends Expr {
+  kind: "FunctionCall";
+  identifier: Identifier;
+  arguments: Expr[];
 }
