@@ -11,7 +11,12 @@ export type NodeType =
   | "Block"
   | "Parameter"
   | "FunctionDeclaration"
-  | "FunctionCall";
+  | "FunctionCall"
+  | "While"
+  | "If"
+  | "UnaryExpr"
+
+import { TokenType } from "./tokenType";
 
 /**
  * Statements do not result in a value at runtime.
@@ -43,7 +48,7 @@ export interface BinaryExpr extends Expr {
   kind: "BinaryExpr";
   left: Expr;
   right: Expr;
-  operator: string; // needs to be of type BinaryOperator
+  operator: TokenType; // needs to be of type BinaryOperator
 }
 
 // LITERAL / PRIMARY EXPRESSION TYPES
@@ -106,4 +111,23 @@ export interface FunctionCall extends Expr {
   kind: "FunctionCall";
   identifier: Identifier;
   arguments: Expr[];
+}
+
+export interface While extends Stmt {
+  kind: "While";
+  condition: Expr;
+  body: Block;
+}
+
+export interface If extends Stmt {
+  kind: "If";
+  condition: Expr;
+  thenBranch: Block;
+  elseBranch?: Block | null; 
+}
+
+export interface UnaryExpr {
+  kind: "UnaryExpr";
+  operator: TokenType.PlusPlus | TokenType.MinusMinus;
+  
 }

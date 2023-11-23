@@ -13,7 +13,23 @@ export enum TokenType  {
     OpenCurlyBrace,
     CloseCurlyBrace,
     Function,
-    Comma
+    Comma,
+    If,
+    While,
+    Else,
+    EqualsEquals,
+    NotEquals,
+    PlusEquals,
+    MinusEquals,
+    StarEquals,
+    SlashEquals,
+    PlusPlus,
+    MinusMinus,
+    Plus,
+    Minus,
+    Star,
+    Slash,
+    Percent
 }
 
 export type Token = {

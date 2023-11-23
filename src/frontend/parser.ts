@@ -15,6 +15,10 @@ import {
     FunctionDeclaration,
     Parameter,
     FunctionCall,
+    While,
+    If,
+    UnaryExpr
+
 } from "./ast";
 
 import { Token, TokenType } from "./tokenType";
@@ -27,35 +31,22 @@ import { Token, TokenType } from "./tokenType";
 export default class Parser {
     private tokens: Token[] = [];
 
-    /*
-     * Determines if the parsing is complete and the END OF FILE Is reached.
-     */
     private not_eof(): boolean {
-        return this.tokens[0].type != TokenType.EOF;
+        return this.tokens[0].type !== TokenType.EOF;
     }
 
-    /**
-     * Returns the currently available token
-     */
-    private at() {
+    private at(): Token {
         return this.tokens[0] as Token;
     }
 
-    /**
-     * Returns the previous token and then advances the tokens array to the next value.
-     */
-    private eat() {
+    private eat(): Token {
         const prev = this.tokens.shift() as Token;
         return prev;
     }
 
-    /**
-     * Returns the previous token and then advances the tokens array to the next value.
-     *  Also checks the type of expected token and throws if the values dnot match.
-     */
-    private expect(type: TokenType, err: any) {
+    private expect(type: TokenType, err: any): Token {
         const prev = this.tokens.shift() as Token;
-        if (!prev || prev.type != type) {
+        if (!prev || prev.type !== type) {
             console.error("Parser Error:\n", err, prev, " - Expecting: ", type);
             process.exit();
         }
@@ -64,13 +55,12 @@ export default class Parser {
     }
 
     public produceAST(_tokens: Array<Token>): Program {
-        this.tokens = _tokens
+        this.tokens = _tokens;
         const program: Program = {
             kind: "Program",
             body: [],
         };
 
-        // Parse until end of file
         while (this.not_eof()) {
             program.body.push(this.parse_stmt());
         }
@@ -80,7 +70,7 @@ export default class Parser {
 
     private parse_block(): Block {
         this.expect(TokenType.OpenCurlyBrace, "Expecting '{' to start a block.");
-        
+
         const statements: Stmt[] = [];
 
         // Parse statements inside the block
@@ -96,9 +86,42 @@ export default class Parser {
         };
     }
 
+    private parse_while(): While {
+        this.expect(TokenType.While, "Expecting 'while' keyword.");
+
+        const condition = this.parse_expr();
+        const body = this.parse_block();
+
+        return {
+            kind: "While",
+            condition,
+            body,
+        };
+    }
+
+    private parse_if(): If {
+        this.expect(TokenType.If, "Expecting 'if' keyword.");
+
+        const condition = this.parse_expr();
+        const thenBranch = this.parse_block();
+
+        let elseBranch: Block | null = null;
+        if (this.at().type === TokenType.Else) {
+            this.eat();
+            elseBranch = this.parse_block();
+        }
+
+        return {
+            kind: "If",
+            condition,
+            thenBranch,
+            elseBranch,
+        };
+    }
+
     private parse_function_declaration(): FunctionDeclaration {
         this.expect(TokenType.Function, "Expecting 'function' keyword.");
-        
+
         const identifier = this.parse_identifier();
         this.expect(TokenType.OpenParen, "Expecting '(' after function identifier.");
 
@@ -108,9 +131,9 @@ export default class Parser {
                 kind: "Parameter",
                 identifier: this.parse_identifier(),
             });
-            
+
             if (this.at().type === TokenType.Comma) {
-                this.eat(); // Consome a vírgula, se houver mais parâmetros
+                this.eat();
             }
         }
 
@@ -126,86 +149,140 @@ export default class Parser {
         };
     }
 
-
-    // Handle complex statement types
     private parse_stmt(): Stmt {
-        // skip to parse_expr
         if (this.at().type === TokenType.Sv) {
-            this.eat()
-            const identifier = this.parse_identifier()
+            this.eat();
+            const identifier = this.parse_identifier();
             if (this.at().value === '=') {
-                this.eat()
-                const initializer = this.parse_expr()
-                if(this.at().type !== TokenType.Semi) {
-                    console.error('Invalid syntax, missing Semicolon symbol')
-                    process.exit()
+                this.eat();
+                const initializer = this.parse_expr();
+                if (this.at().type !== TokenType.Semi) {
+                    console.error('Invalid syntax, missing Semicolon symbol');
+                    process.exit();
                 }
-                this.eat()
+                this.eat();
                 return {
                     kind: "VariableDeclaration",
                     identifier,
-                    initializer
-                } as VariableDeclaration
+                    initializer,
+                } as VariableDeclaration;
             } else {
-                if(this.at().type !== TokenType.Semi) {
-                    console.error('Invalid syntax, missing Semicolon symbol')
-                    process.exit()
+                if (this.at().type !== TokenType.Semi) {
+                    console.error('Invalid syntax, missing Semicolon symbol');
+                    process.exit();
                 }
-                this.eat()
+                this.eat();
                 return {
                     kind: "VariableDeclaration",
                     identifier,
-                    initializer: null
-                } as VariableDeclaration
+                    initializer: null,
+                } as VariableDeclaration;
             }
-        } else if(this.at().type === TokenType.Semi) {
-            return {kind: "Semicolon", symbol: this.eat().value} as Semicolon
+        } else if (this.at().type === TokenType.Semi) {
+            this.eat();
+            return { kind: "Semicolon", symbol: ';' } as Semicolon;
         } else if (this.at().type === TokenType.Function) {
             return this.parse_function_declaration();
-        } else if (this.at().type === TokenType.Semi) {
-            return { kind: "Semicolon", symbol: this.eat().value } as Semicolon;
+        } else if (this.at().type === TokenType.While) {
+            return this.parse_while();
+        } else if (this.at().type === TokenType.If) {
+            return this.parse_if();
+        } else if (this.at().type === TokenType.OpenCurlyBrace) {
+            // Parse block
+            return this.parse_block();
         }
+
         return this.parse_expr();
     }
 
     private parse_identifier(): Identifier {
         return {
             kind: "Identifier",
-            symbol: this.eat().value
-        } as Identifier
+            symbol: this.eat().value,
+        } as Identifier;
     }
 
-    // Handle expressions
     private parse_expr(): Expr {
         return this.parse_additive_expr();
     }
 
-    // Handle Addition & Subtraction Operations
-    private parse_additive_expr(): Expr {
-        let left = this.parse_multiplicitave_expr();
+    private parse_unary_expr(): Expr {
+        const tk = this.at().type;
+    
+        if (tk === TokenType.PlusPlus || tk === TokenType.MinusMinus) {
+            const operator = this.eat().type;
+            const operand = this.parse_primary_expr();
+            return {
+                kind: "UnaryExpr",
+                operator,
+                operand,
+            } as UnaryExpr;
+        } else if (tk === TokenType.Identifier && this.tokens[1]?.type === TokenType.MinusMinus) {
+            // Handle -- as a unary operator
+            const identifier = this.parse_identifier();
+            this.eat(); // Consume --
+            return {
+                kind: "UnaryExpr",
+                operator: TokenType.MinusMinus,
+                operand: identifier,
+            } as UnaryExpr;
+        }
+    
+        return this.parse_primary_expr();
+    }
 
-        while (this.at().value == "+" || this.at().value == "-") {
-            const operator = this.eat().value;
-            const right = this.parse_multiplicitave_expr();
+    private parse_additive_expr(): Expr {
+        let left = this.parse_multiplicative_expr();
+    
+        while (
+            this.at().type === TokenType.Plus ||
+            this.at().type === TokenType.Minus ||
+            this.at().type === TokenType.PlusEquals ||
+            this.at().type === TokenType.MinusEquals ||
+            this.at().type === TokenType.PlusPlus ||
+            this.at().type === TokenType.MinusMinus
+        ) {
+            const operator = this.eat().type;
+            let right: Expr;
+    
+            if (operator === TokenType.PlusPlus || operator === TokenType.MinusMinus) {
+                // Handle ++ and -- as unary operators
+                right = {
+                    kind: "UnaryExpr",
+                    operator,
+                    
+                } as Expr;
+            } else {
+                // Handle other binary operators
+                right = this.parse_multiplicative_expr();
+            }
+    
             left = {
                 kind: "BinaryExpr",
                 left,
                 right,
-                operator,
             } as BinaryExpr;
+    
+            // Check for optional semicolon
+            if (this.at().type === TokenType.Semi) {
+                this.eat(); // Consume the semicolon
+            }
         }
-
+    
         return left;
     }
 
-    // Handle Multiplication, Division & Modulo Operations
-    private parse_multiplicitave_expr(): Expr {
+    private parse_multiplicative_expr(): Expr {
         let left = this.parse_primary_expr();
 
         while (
-            this.at().value == "/" || this.at().value == "*" || this.at().value == "%"
+            this.at().type === TokenType.Star ||
+            this.at().type === TokenType.Slash ||
+            this.at().type === TokenType.Percent ||
+            this.at().type === TokenType.StarEquals ||
+            this.at().type === TokenType.SlashEquals
         ) {
-            const operator = this.eat().value;
+            const operator = this.eat().type;
             const right = this.parse_primary_expr();
             left = {
                 kind: "BinaryExpr",
@@ -220,85 +297,79 @@ export default class Parser {
 
     private parse_function_call(identifier: Identifier): FunctionCall {
         this.expect(TokenType.OpenParen, "Expecting '(' after function identifier.");
-    
+
         const args: Expr[] = [];
-        
+
         while (this.at().type !== TokenType.CloseParen) {
             args.push(this.parse_expr());
-            
+
             if (this.at().type === TokenType.Comma) {
-                this.eat(); // Consome a vírgula, se houver mais argumentos
+                this.eat();
             }
         }
-    
+
         this.expect(TokenType.CloseParen, "Expecting ')' after function arguments.");
-    
+
         return {
             kind: "FunctionCall",
             identifier,
             arguments: args,
         };
     }
-    
-    // Orders Of Prescidence
-    // AdditiveExpr
-    // MultiplicitaveExpr
-    // PrimaryExpr
 
-    // Parse Literal Values & Grouping Expressions
     private parse_primary_expr(): Expr {
         const tk = this.at().type;
-      
-        // Determine which token we are currently at and return the appropriate AST node
+        const symbol = this.at().value
+        console.log(symbol);
         switch (tk) {
-          // User-defined values.
-          case TokenType.Identifier:
-            const identifier = this.parse_identifier();
+            case TokenType.Identifier:
+                const identifier = this.parse_identifier();
 
-            if (this.at().type === TokenType.OpenParen) {
-                return this.parse_function_call(identifier);
-            }
-            return identifier;
-      
-          // Constants and Numeric Constants
-          case TokenType.Number:
-            return {
-              kind: "NumericLiteral",
-              value: parseFloat(this.eat().value),
-            } as NumericLiteral;
-      
-          // Grouping Expressions
-          case TokenType.OpenParen: {
-            this.eat(); // Eat the opening paren
-            const value = this.parse_expr();
-            this.expect(
-              TokenType.CloseParen,
-              "Unexpected token found inside parenthesized expression. Expected closing parenthesis.",
-            ); // Closing paren
-            return value;
-          }
+                if (this.at().type === TokenType.OpenParen) {
+                    return this.parse_function_call(identifier);
+                }
+                return identifier;
 
-      
-          case TokenType._return: {
-            this.eat(); // Eat the 'return' keyword
-            if (this.at().type === TokenType.Semi) {
-              // 'return' statement without an expression
-              return { kind: "_return", expression: null } as _return;
-            } else {
-              // 'return' statement with an expression
-              const expression = this.parse_expr();
-              return { kind: "_return", expression } as _return;
+            case TokenType.Number:
+                return {
+                    kind: "NumericLiteral",
+                    value: parseFloat(this.eat().value),
+                } as NumericLiteral;
+
+            case TokenType.MinusMinus:
+            case TokenType.PlusPlus:
+                const operator = this.eat().type;
+                const operand = this.parse_primary_expr();
+                return {
+                    kind: "UnaryExpr",
+                    operator,
+                    operand,
+                } as UnaryExpr;
+
+            case TokenType.OpenParen: {
+                this.eat();
+                const value = this.parse_expr();
+                this.expect(TokenType.CloseParen, "Unexpected token found inside parenthesized expression. Expected closing parenthesis.");
+                return value;
             }
-          }
-      
-          case TokenType.String:
-            return { kind: "String", symbol: this.eat().value } as String;
-      
-          // Unidentified Tokens and Invalid Code Reached
-          default:
-            console.error("Unexpected token found during parsing!", this.at());
-            process.exit();
+
+            case TokenType._return: {
+                this.eat();
+                if (this.at().type === TokenType.Semi) {
+                    return { kind: "_return", expression: null } as _return;
+                } else {
+                    const expression = this.parse_expr();
+                    return { kind: "_return", expression } as _return;
+                }
+            }
+
+            case TokenType.String:
+                return { kind: "String", symbol: this.eat().value } as String;
+            case TokenType.Semi:
+                return { kind: "Semicolon" }; 
+            default:
+                console.error("Unexpected token found during parsing!", this.at());
+                process.exit();
         }
-      }
-      
+    }
 }

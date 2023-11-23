@@ -6,7 +6,7 @@ import Parser from './frontend/parser'
 import SemanticAnalyzer from './frontend/SemanticAnalyzer'
 import CodeGenerator from './backend/generateCode';
 
-// -> /home/marcelo/Desktop/side-projects/compiler/src/test.sv
+// -> /home/celin/Desktop/SV-compiler/src/test.sv
 
 
 function readFile(pathOfFile: string):string {
