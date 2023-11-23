@@ -77,6 +77,7 @@ export interface NumericLiteral extends Expr {
 export interface VariableDeclaration extends Stmt {
   kind: "VariableDeclaration";
   identifier: Identifier;
+  type: TokenType | null; 
   initializer: Expr | null;
 }
 

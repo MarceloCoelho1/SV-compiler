@@ -3,10 +3,12 @@ import { Token, TokenType } from "./tokenType";
 const LETTER = /[a-zA-Z]/
 const WHITESPACE = /[\n\t ]/
 const NUMBERS = /[0-9]/
+const TYPES = ['bool', 'int', 'char', 'double', 'String', 'float'];
 
 function token(value = "", type: TokenType): Token {
   return { value, type };
 }
+
 
 function reservedKeyword(reserved: string): boolean {
   const keywords = ['sv', 'if', 'else', 'while', 'function', 'return'];
@@ -104,14 +106,30 @@ export default function tokenize(sourceCode: string): Token[] {
         while (src.length > 0 && LETTER.test(src[0])) {
           ident += src.shift();
         }
-        const reserved = reservedKeyword(ident);
-        if (ident === 'return') {
-          tokens.push(token(ident, TokenType._return));
-        } else if (reserved && ident === 'sv') {
-          tokens.push(token(ident, TokenType.Sv));
+
+        if (TYPES.includes(ident)) {
+          if (ident == 'String') {
+            tokens.push(token(ident, TokenType.String))
+          } else if (ident == 'int') {
+            tokens.push(token(ident, TokenType.int))
+          } else if (ident == 'float') {
+            tokens.push(token(ident, TokenType.float))
+          } else if (ident == 'char') {
+            tokens.push(token(ident, TokenType.char))
+          } else if (ident == 'bool') {
+            tokens.push(token(ident, TokenType.bool))
+          }
         } else {
-          tokens.push(token(ident, TokenType.Identifier));
+          const reserved = reservedKeyword(ident);
+          if (ident === 'return') {
+            tokens.push(token(ident, TokenType._return));
+          } else if (reserved && ident === 'sv') {
+            tokens.push(token(ident, TokenType.Sv));
+          } else {
+            tokens.push(token(ident, TokenType.Identifier));
+          }
         }
+        
       } else if (WHITESPACE.test(src[0])) {
         src.shift();
       } else {

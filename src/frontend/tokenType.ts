@@ -29,7 +29,11 @@ export enum TokenType  {
     Minus,
     Star,
     Slash,
-    Percent
+    Percent,
+    int, 
+    float,
+    bool,
+    char
 }
 
 export type Token = {

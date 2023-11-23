@@ -9,7 +9,6 @@ import {
     Semicolon,
     Stmt,
     String,
-    VariableDeclaration,
     _return,
     Block,
     FunctionDeclaration,
@@ -17,17 +16,14 @@ import {
     FunctionCall,
     While,
     If,
-    UnaryExpr
-
+    UnaryExpr,
+    VariableDeclaration,
 } from "./ast";
 
 import { Token, TokenType } from "./tokenType";
 
 
 
-/**
- * Frontend for producing a valid AST from sourcode
- */
 export default class Parser {
     private tokens: Token[] = [];
 
@@ -73,7 +69,6 @@ export default class Parser {
 
         const statements: Stmt[] = [];
 
-        // Parse statements inside the block
         while (this.at().type !== TokenType.CloseCurlyBrace && this.not_eof()) {
             statements.push(this.parse_stmt());
         }
@@ -123,7 +118,10 @@ export default class Parser {
         this.expect(TokenType.Function, "Expecting 'function' keyword.");
 
         const identifier = this.parse_identifier();
-        this.expect(TokenType.OpenParen, "Expecting '(' after function identifier.");
+        this.expect(
+            TokenType.OpenParen,
+            "Expecting '(' after function identifier."
+        );
 
         const parameters: Parameter[] = [];
         while (this.at().type === TokenType.Identifier) {
@@ -137,7 +135,10 @@ export default class Parser {
             }
         }
 
-        this.expect(TokenType.CloseParen, "Expecting ')' after function parameters.");
+        this.expect(
+            TokenType.CloseParen,
+            "Expecting ')' after function parameters."
+        );
 
         const body = this.parse_block();
 
@@ -150,50 +151,59 @@ export default class Parser {
     }
 
     private parse_stmt(): Stmt {
-        if (this.at().type === TokenType.Sv) {
+        if (this.at().type === TokenType.int || this.at().type === TokenType.float || this.at().type === TokenType.bool || this.at().type === TokenType.char || this.at().type === TokenType.String) {
+          const type =
+            this.at().type === TokenType.int ||
+            this.at().type === TokenType.float ||
+            this.at().type === TokenType.bool ||
+            this.at().type === TokenType.char ||
+            this.at().type === TokenType.String
+              ? this.eat().type
+              : null;
+          const identifier = this.parse_identifier();
+          if (this.at().value === "=") {
             this.eat();
-            const identifier = this.parse_identifier();
-            if (this.at().value === '=') {
-                this.eat();
-                const initializer = this.parse_expr();
-                if (this.at().type !== TokenType.Semi) {
-                    console.error('Invalid syntax, missing Semicolon symbol');
-                    process.exit();
-                }
-                this.eat();
-                return {
-                    kind: "VariableDeclaration",
-                    identifier,
-                    initializer,
-                } as VariableDeclaration;
-            } else {
-                if (this.at().type !== TokenType.Semi) {
-                    console.error('Invalid syntax, missing Semicolon symbol');
-                    process.exit();
-                }
-                this.eat();
-                return {
-                    kind: "VariableDeclaration",
-                    identifier,
-                    initializer: null,
-                } as VariableDeclaration;
+            const initializer = this.parse_expr();
+            if (this.at().type !== TokenType.Semi) {
+              console.error("Invalid syntax, missing Semicolon symbol");
+              process.exit();
             }
-        } else if (this.at().type === TokenType.Semi) {
             this.eat();
-            return { kind: "Semicolon", symbol: ';' } as Semicolon;
+            return {
+              kind: "VariableDeclaration",
+              identifier,
+              type,
+              initializer,
+            } as VariableDeclaration;
+          } else {
+            if (this.at().type !== TokenType.Semi) {
+              console.error("Invalid syntax, missing Semicolon symbol");
+              process.exit();
+            }
+            this.eat();
+            return {
+              kind: "VariableDeclaration",
+              identifier,
+              type,
+              initializer: null,
+            } as VariableDeclaration;
+          }
+        } else if (this.at().type === TokenType.Semi) {
+          this.eat();
+          return { kind: "Semicolon" };
         } else if (this.at().type === TokenType.Function) {
-            return this.parse_function_declaration();
+          return this.parse_function_declaration();
         } else if (this.at().type === TokenType.While) {
-            return this.parse_while();
+          return this.parse_while();
         } else if (this.at().type === TokenType.If) {
-            return this.parse_if();
+          return this.parse_if();
         } else if (this.at().type === TokenType.OpenCurlyBrace) {
-            // Parse block
-            return this.parse_block();
+          return this.parse_block();
         }
-
+      
         return this.parse_expr();
-    }
+      }
+
 
     private parse_identifier(): Identifier {
         return {
@@ -208,7 +218,7 @@ export default class Parser {
 
     private parse_unary_expr(): Expr {
         const tk = this.at().type;
-    
+
         if (tk === TokenType.PlusPlus || tk === TokenType.MinusMinus) {
             const operator = this.eat().type;
             const operand = this.parse_primary_expr();
@@ -217,23 +227,25 @@ export default class Parser {
                 operator,
                 operand,
             } as UnaryExpr;
-        } else if (tk === TokenType.Identifier && this.tokens[1]?.type === TokenType.MinusMinus) {
-            // Handle -- as a unary operator
+        } else if (
+            tk === TokenType.Identifier &&
+            this.tokens[1]?.type === TokenType.MinusMinus
+        ) {
             const identifier = this.parse_identifier();
-            this.eat(); // Consume --
+            this.eat();
             return {
                 kind: "UnaryExpr",
                 operator: TokenType.MinusMinus,
                 operand: identifier,
             } as UnaryExpr;
         }
-    
+
         return this.parse_primary_expr();
     }
 
     private parse_additive_expr(): Expr {
         let left = this.parse_multiplicative_expr();
-    
+
         while (
             this.at().type === TokenType.Plus ||
             this.at().type === TokenType.Minus ||
@@ -244,31 +256,31 @@ export default class Parser {
         ) {
             const operator = this.eat().type;
             let right: Expr;
-    
-            if (operator === TokenType.PlusPlus || operator === TokenType.MinusMinus) {
-                // Handle ++ and -- as unary operators
+
+            if (
+                operator === TokenType.PlusPlus ||
+                operator === TokenType.MinusMinus
+            ) {
                 right = {
                     kind: "UnaryExpr",
                     operator,
-                    
                 } as Expr;
             } else {
-                // Handle other binary operators
                 right = this.parse_multiplicative_expr();
             }
-    
+
             left = {
                 kind: "BinaryExpr",
                 left,
                 right,
+                operator,
             } as BinaryExpr;
-    
-            // Check for optional semicolon
+
             if (this.at().type === TokenType.Semi) {
-                this.eat(); // Consume the semicolon
+                this.eat();
             }
         }
-    
+
         return left;
     }
 
@@ -319,8 +331,7 @@ export default class Parser {
 
     private parse_primary_expr(): Expr {
         const tk = this.at().type;
-        const symbol = this.at().value
-        console.log(symbol);
+
         switch (tk) {
             case TokenType.Identifier:
                 const identifier = this.parse_identifier();
@@ -349,7 +360,10 @@ export default class Parser {
             case TokenType.OpenParen: {
                 this.eat();
                 const value = this.parse_expr();
-                this.expect(TokenType.CloseParen, "Unexpected token found inside parenthesized expression. Expected closing parenthesis.");
+                this.expect(
+                    TokenType.CloseParen,
+                    "Unexpected token found inside parenthesized expression. Expected closing parenthesis."
+                );
                 return value;
             }
 
@@ -365,8 +379,10 @@ export default class Parser {
 
             case TokenType.String:
                 return { kind: "String", symbol: this.eat().value } as String;
+
             case TokenType.Semi:
-                return { kind: "Semicolon" }; 
+                return { kind: "Semicolon" };
+
             default:
                 console.error("Unexpected token found during parsing!", this.at());
                 process.exit();

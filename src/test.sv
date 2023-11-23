@@ -1,4 +1,4 @@
-sv name = "Marcelo";
+String name = "Marcelo";
 
 function sayHello(name) {
     print("Hello");
@@ -8,7 +8,7 @@ function sayHello(name) {
 }
 
 
-sv expr = (10 * 10 + 10);
+int expr = (10 * 10 + 10);
 
 print("expr");
 
@@ -23,3 +23,5 @@ while(true) {
     print("Hello");
     expr--;    
 }
+
+int name = 10;
