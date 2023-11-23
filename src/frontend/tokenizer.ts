@@ -64,10 +64,22 @@ export default function tokenize(sourceCode: string): Token[] {
     } else {
       if (NUMBERS.test(src[0])) {
         let num = "";
+      
+        // Parte inteira
         while (src.length > 0 && NUMBERS.test(src[0])) {
           num += src.shift();
         }
-        tokens.push(token(num, TokenType.Number));
+      
+        // Parte decimal (se houver)
+        if (src[0] === '.') {
+          num += src.shift(); // Adiciona o ponto decimal
+          while (src.length > 0 && NUMBERS.test(src[0])) {
+            num += src.shift();
+          }
+          tokens.push(token(num, TokenType.float));
+        } else {
+          tokens.push(token(num, TokenType.Number));
+        }
       } else if (src.join('').startsWith('function')) {
         while (src.length > 0 && LETTER.test(src[0])) {
           src.shift(); 
@@ -88,7 +100,19 @@ export default function tokenize(sourceCode: string): Token[] {
           src.shift(); 
         }
         tokens.push(token('while', TokenType.While));
-      } else if (src[0] === "'" || src[0] === '"') {
+      } else if (src[0] === "'") {
+        const quote = src.shift();
+        const charValue = src.shift(); // Obtenha o caractere entre as aspas simples
+      
+        if (src[0] !== quote) {
+          console.error("not a char: ", charValue);
+          process.exit();
+        }
+      
+        tokens.push(token(charValue, TokenType.char));
+      
+        src.shift(); // Consome a aspa de fechamento
+      }else if (src[0] === '"') {
         const quote = src.shift();
         let ident = "";
         while (src.length > 0 && src[0] !== quote) {

@@ -15,6 +15,8 @@ export type NodeType =
   | "While"
   | "If"
   | "UnaryExpr"
+  | "Char"
+  | "FloatLiteral"
 
 import { TokenType } from "./tokenType";
 
@@ -74,6 +76,11 @@ export interface NumericLiteral extends Expr {
   value: number;
 }
 
+export interface FloatLiteral extends Expr {
+  kind: "FloatLiteral";
+  value: number;
+}
+
 export interface VariableDeclaration extends Stmt {
   kind: "VariableDeclaration";
   identifier: Identifier;
@@ -83,6 +90,11 @@ export interface VariableDeclaration extends Stmt {
 
 export interface String extends Stmt {
   kind: "String";
+  symbol: string
+}
+
+export interface Char extends Stmt {
+  kind: "Char";
   symbol: string
 }
 

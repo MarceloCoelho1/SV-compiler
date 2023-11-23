@@ -18,6 +18,8 @@ import {
     If,
     UnaryExpr,
     VariableDeclaration,
+    Char,
+    FloatLiteral,
 } from "./ast";
 
 import { Token, TokenType } from "./tokenType";
@@ -347,6 +349,11 @@ export default class Parser {
                     value: parseFloat(this.eat().value),
                 } as NumericLiteral;
 
+            case TokenType.float:
+                return {
+                    kind: "FloatLiteral",
+                    value: parseFloat(this.eat().value)
+                } as FloatLiteral
             case TokenType.MinusMinus:
             case TokenType.PlusPlus:
                 const operator = this.eat().type;
@@ -376,6 +383,9 @@ export default class Parser {
                     return { kind: "_return", expression } as _return;
                 }
             }
+
+            case TokenType.char:
+                return {kind: "Char", symbol: this.eat().value} as Char;
 
             case TokenType.String:
                 return { kind: "String", symbol: this.eat().value } as String;
