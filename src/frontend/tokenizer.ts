@@ -74,7 +74,7 @@ export default function tokenize(sourceCode: string): Token[] {
 
         // Parte decimal (se houver)
         if (src[0] === '.') {
-          num += src.shift(); // Adiciona o ponto decimal
+          num += src.shift(); 
           while (src.length > 0 && NUMBERS.test(src[0])) {
             num += src.shift();
           }

@@ -60,6 +60,7 @@ export interface BinaryExpr extends Expr {
  */
 export interface Identifier extends Expr {
   kind: "Identifier";
+  type: TokenType;
   symbol: string;
 }
 
@@ -110,7 +111,7 @@ export interface Block extends Stmt {
 
 export interface Parameter extends Expr {
   kind: "Parameter";
-  identifier: Identifier;
+  identifier: Stmt;
 }
 
 export interface FunctionDeclaration extends Stmt {

@@ -119,20 +119,20 @@ export default class Parser {
         };
     }
 
+
     private parse_function_declaration(): FunctionDeclaration {
         this.expect(TokenType.Function, "Expecting 'function' keyword.");
-
+        
         const identifier = this.parse_identifier();
         this.expect(
             TokenType.OpenParen,
             "Expecting '(' after function identifier."
         );
-
         const parameters: Parameter[] = [];
-        while (this.at().type === TokenType.Identifier) {
+        while (this.at().type !== TokenType.CloseParen) {
             parameters.push({
                 kind: "Parameter",
-                identifier: this.parse_identifier(),
+                identifier: this.parse_function_declartion_parameters(),
             });
 
             if (this.at().type === TokenType.Comma) {
@@ -153,6 +153,27 @@ export default class Parser {
             parameters,
             body,
         };
+    }
+
+    private parse_function_declartion_parameters(): Identifier {
+
+        if(
+            this.at().type === TokenType.bool || 
+            this.at().type === TokenType.String ||
+            this.at().type === TokenType.float ||
+            this.at().type === TokenType.int ||
+            this.at().type === TokenType.char
+        ) {
+            return {
+                kind: "Identifier",
+                type: this.eat().type,
+                symbol: this.eat().value,
+            } as Identifier;
+        } else {
+            console.error("Parameter variable type is not correct", this.at().value) 
+            process.exit()
+        }
+        
     }
 
     private parse_switch(): SwitchStmt {
@@ -351,7 +372,6 @@ export default class Parser {
         this.expect(TokenType.OpenParen, "Expecting '(' after function identifier.");
 
         const args: Expr[] = [];
-
         while (this.at().type !== TokenType.CloseParen) {
             args.push(this.parse_expr());
 
@@ -392,6 +412,7 @@ export default class Parser {
                     kind: "FloatLiteral",
                     value: parseFloat(this.eat().value)
                 } as FloatLiteral
+            
             case TokenType.MinusMinus:
             case TokenType.PlusPlus:
                 const operator = this.eat().type;
