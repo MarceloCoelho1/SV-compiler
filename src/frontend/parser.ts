@@ -204,25 +204,19 @@ export default class Parser {
             } else if (this.at().type === TokenType.Default) {
                 this.eat();
                 this.expect(TokenType.Colon, "Expecting ':' after 'default' keyword.");
-                this.eat();
                 const body: Stmt[] = [];
-                while (this.at().type !== TokenType.CloseCurlyBrace) {
+                while (this.at().type !== TokenType.Break) {
                     body.push(this.parse_stmt());
                 }
-                body.push(this.parse_stmt());
+                this.eat();
+                this.eat();
                 defaultCase = body;
 
                 
-            } else {
-                return {
-                    kind: "SwitchStmt",
-                    expression,
-                    cases,
-                    default: defaultCase,
-                } as SwitchStmt;
-            }
+            } 
         }
-        
+        // eat the closeCurlyBrace
+        this.eat();
         return {
             kind: "SwitchStmt",
             expression,
@@ -282,9 +276,6 @@ export default class Parser {
           return this.parse_block();
         } else if (this.at().type === TokenType.Switch) {
             return this.parse_switch();
-        } else if (this.at().type === TokenType.CloseCurlyBrace) {
-            this.eat();
-            return {kind: "CloseCurlyBrace"} as Stmt;
         } 
       
         return this.parse_expr();

@@ -4,7 +4,7 @@ switch(tk) {
         break;
 
     default:
-        print("Hello");
+        print("SALVE");
         break;
 }
 
@@ -13,7 +13,7 @@ String name = "Marcelo";
 char value = 'b';
 int num = 10;
 float num = 20.2;
-bool = true;
+bool name = true;
 
 
 function sayHello(String name, int age) {
