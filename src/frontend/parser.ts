@@ -20,6 +20,9 @@ import {
     VariableDeclaration,
     Char,
     FloatLiteral,
+    CaseStmt,
+    SwitchStmt,
+    DefaultStmt,
 } from "./ast";
 
 import { Token, TokenType } from "./tokenType";
@@ -152,6 +155,61 @@ export default class Parser {
         };
     }
 
+    private parse_switch(): SwitchStmt {
+        this.expect(TokenType.Switch, "Expecting 'switch' keyword.");
+    
+        const expression = this.parse_expr();
+        this.expect(TokenType.OpenCurlyBrace, "Expecting '{' to start a switch block.");
+    
+        const cases: CaseStmt[] = [];
+        let defaultCase: Stmt[] | null = null;
+        while (this.at().type !== TokenType.CloseCurlyBrace) {
+            if (this.at().type === TokenType.Case) {
+                this.eat();
+                const value = this.parse_expr();
+                this.expect(TokenType.Colon, "Expecting ':' after case expression.");
+                const body: Stmt[] = [];
+
+                while (this.at().type !== TokenType.Break) {
+                    body.push(this.parse_stmt());
+                }
+                this.eat();
+                this.eat();
+                cases.push({
+                    kind: "CaseStmt",
+                    value,
+                    body,
+                });
+            } else if (this.at().type === TokenType.Default) {
+                this.eat();
+                this.expect(TokenType.Colon, "Expecting ':' after 'default' keyword.");
+                this.eat();
+                const body: Stmt[] = [];
+                while (this.at().type !== TokenType.CloseCurlyBrace) {
+                    body.push(this.parse_stmt());
+                }
+                body.push(this.parse_stmt());
+                defaultCase = body;
+
+                
+            } else {
+                return {
+                    kind: "SwitchStmt",
+                    expression,
+                    cases,
+                    default: defaultCase,
+                } as SwitchStmt;
+            }
+        }
+        
+        return {
+            kind: "SwitchStmt",
+            expression,
+            cases,
+            default: defaultCase,
+        } as SwitchStmt;
+    }
+
     private parse_stmt(): Stmt {
         if (this.at().type === TokenType.int || this.at().type === TokenType.float || this.at().type === TokenType.bool || this.at().type === TokenType.char || this.at().type === TokenType.String) {
           const type =
@@ -201,7 +259,12 @@ export default class Parser {
           return this.parse_if();
         } else if (this.at().type === TokenType.OpenCurlyBrace) {
           return this.parse_block();
-        }
+        } else if (this.at().type === TokenType.Switch) {
+            return this.parse_switch();
+        } else if (this.at().type === TokenType.CloseCurlyBrace) {
+            this.eat();
+            return {kind: "CloseCurlyBrace"} as Stmt;
+        } 
       
         return this.parse_expr();
       }
@@ -218,32 +281,7 @@ export default class Parser {
         return this.parse_additive_expr();
     }
 
-    private parse_unary_expr(): Expr {
-        const tk = this.at().type;
-
-        if (tk === TokenType.PlusPlus || tk === TokenType.MinusMinus) {
-            const operator = this.eat().type;
-            const operand = this.parse_primary_expr();
-            return {
-                kind: "UnaryExpr",
-                operator,
-                operand,
-            } as UnaryExpr;
-        } else if (
-            tk === TokenType.Identifier &&
-            this.tokens[1]?.type === TokenType.MinusMinus
-        ) {
-            const identifier = this.parse_identifier();
-            this.eat();
-            return {
-                kind: "UnaryExpr",
-                operator: TokenType.MinusMinus,
-                operand: identifier,
-            } as UnaryExpr;
-        }
-
-        return this.parse_primary_expr();
-    }
+    
 
     private parse_additive_expr(): Expr {
         let left = this.parse_multiplicative_expr();

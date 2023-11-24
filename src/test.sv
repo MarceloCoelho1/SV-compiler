@@ -1,1 +1,8 @@
-float weight = 10.0;
+switch(tk) {
+    case "oi":
+        print("OI");
+        break;
+
+    default:
+        print("Hello");
+}

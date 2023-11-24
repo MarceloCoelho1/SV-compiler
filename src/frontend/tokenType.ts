@@ -33,7 +33,12 @@ export enum TokenType  {
     int, 
     float,
     bool,
-    char
+    char,
+    Switch,
+    Case,
+    Default,
+    Colon,
+    Break
 }
 
 export type Token = {

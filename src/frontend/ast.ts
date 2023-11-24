@@ -1,3 +1,4 @@
+import { TokenType } from "./tokenType";
 
 export type NodeType =
   | "Program"
@@ -17,17 +18,17 @@ export type NodeType =
   | "UnaryExpr"
   | "Char"
   | "FloatLiteral"
-
-import { TokenType } from "./tokenType";
+  | "SwitchStmt"
+  | "CaseStmt"
+  | "DefaultStmt"
+  | "CloseCurlyBrace" // Adicionando SwitchStmt ao tipo NodeType
 
 /**
  * Statements do not result in a value at runtime.
  They contain one or more expressions internally */
-export interface Stmt {
+export interface Stmt  {
   kind: NodeType;
 }
-
-
 
 /**
  * Defines a block which contains many statements.
@@ -42,7 +43,7 @@ export interface Program extends Stmt {
 export interface Expr extends Stmt {}
 
 /**
- * A operation with two sides seperated by a operator.
+ * A operation with two sides separated by a operator.
  * Both sides can be ANY Complex Expression.
  * - Supported Operators -> + | - | / | * | %
  */
@@ -64,12 +65,11 @@ export interface Identifier extends Expr {
 
 export interface _return extends Stmt {
   kind: '_return';
-  expression: Expr | null ;
+  expression: Expr | null;
 }
 
-
 /**
- * Represents a numeric constant inside the soure code.
+ * Represents a numeric constant inside the source code.
  */
 export interface NumericLiteral extends Expr {
   kind: "NumericLiteral";
@@ -84,23 +84,23 @@ export interface FloatLiteral extends Expr {
 export interface VariableDeclaration extends Stmt {
   kind: "VariableDeclaration";
   identifier: Identifier;
-  type: TokenType | null; 
+  type: TokenType | null;
   initializer: Expr | null;
 }
 
 export interface String extends Stmt {
   kind: "String";
-  symbol: string
+  symbol: string;
 }
 
 export interface Char extends Stmt {
   kind: "Char";
-  symbol: string
+  symbol: string;
 }
 
 export interface Semicolon extends Stmt {
   kind: "Semicolon";
-  symbol: string
+  symbol: string;
 }
 
 export interface Block extends Stmt {
@@ -136,11 +136,29 @@ export interface If extends Stmt {
   kind: "If";
   condition: Expr;
   thenBranch: Block;
-  elseBranch?: Block | null; 
+  elseBranch?: Block | null;
 }
 
 export interface UnaryExpr {
   kind: "UnaryExpr";
   operator: TokenType.PlusPlus | TokenType.MinusMinus;
-  
+}
+
+// Adicionando a definição para SwitchStmt
+export interface SwitchStmt extends Stmt {
+  kind: "SwitchStmt";
+  expression: Expr;
+  cases: CaseStmt[];
+  default?: Block | null;
+}
+
+export interface CaseStmt extends Stmt {
+  kind: "CaseStmt";
+  value: Expr;
+  body: Stmt[];
+}
+
+export interface DefaultStmt extends Stmt {
+  kind: "DefaultStmt";
+  body: Stmt[];
 }
