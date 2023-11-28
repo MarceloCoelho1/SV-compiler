@@ -61,8 +61,10 @@ export default function tokenize(sourceCode: string): Token[] {
       tokens.push(token(src.shift(), TokenType.Semi));
     } else if (src[0] === ',') {
       tokens.push(token(src.shift(), TokenType.Comma));
-    } else if(src[0] == ':') {
+    } else if (src[0] == ':') {
       tokens.push(token(src.shift(), TokenType.Colon));
+    } else if (src[0] === "<") {
+      tokens.push(token(src.shift(), TokenType.LessThan));
     } else {
       if (NUMBERS.test(src[0])) {
         let num = "";
@@ -74,7 +76,7 @@ export default function tokenize(sourceCode: string): Token[] {
 
         // Parte decimal (se houver)
         if (src[0] === '.') {
-          num += src.shift(); 
+          num += src.shift();
           while (src.length > 0 && NUMBERS.test(src[0])) {
             num += src.shift();
           }
@@ -87,6 +89,11 @@ export default function tokenize(sourceCode: string): Token[] {
           src.shift();
         }
         tokens.push(token('function', TokenType.Function));
+      } else if (src.join('').startsWith('for')) {
+        while (src.length > 0 && LETTER.test(src[0])) {
+          src.shift();
+        }
+        tokens.push(token('for', TokenType.For));
       } else if (src.join('').startsWith('if')) {
         while (src.length > 0 && LETTER.test(src[0])) {
           src.shift();
@@ -112,7 +119,7 @@ export default function tokenize(sourceCode: string): Token[] {
           src.shift();
         }
         tokens.push(token('case', TokenType.Case));
-      }else if (src.join('').startsWith('break')) {
+      } else if (src.join('').startsWith('break')) {
         while (src.length > 0 && LETTER.test(src[0])) {
           src.shift();
         }
@@ -122,8 +129,7 @@ export default function tokenize(sourceCode: string): Token[] {
           src.shift();
         }
         tokens.push(token('default', TokenType.Default));
-      }
-      else if (src[0] === "'") {
+      } else if (src[0] === "'") {
         const quote = src.shift();
         const charValue = src.shift(); // Obtenha o caractere entre as aspas simples
 

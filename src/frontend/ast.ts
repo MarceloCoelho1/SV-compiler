@@ -21,7 +21,8 @@ export type NodeType =
   | "SwitchStmt"
   | "CaseStmt"
   | "DefaultStmt"
-  | "CloseCurlyBrace" // Adicionando SwitchStmt ao tipo NodeType
+  | "CloseCurlyBrace"
+  | "ForStmt" // Adicionando SwitchStmt ao tipo NodeType
 
 /**
  * Statements do not result in a value at runtime.
@@ -163,3 +164,12 @@ export interface DefaultStmt extends Stmt {
   kind: "DefaultStmt";
   body: Stmt[];
 }
+
+export interface ForStmt extends Stmt {
+  kind: "ForStmt";
+  initialization: VariableDeclaration | Expr | null;
+  condition: Expr | null;
+  increment: Expr | null;
+  body: Block;
+}
+

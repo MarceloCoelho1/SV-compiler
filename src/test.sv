@@ -9,6 +9,8 @@ switch(tk) {
 }
 
 
+int value = (10 + 10 + 1);
+
 String name = "Marcelo";
 char value = 'b';
 int num = 10;
@@ -22,3 +24,7 @@ function sayHello(String name, int age) {
 }
 
 sayHello("Marcelo", 19);
+
+for (int i = 0; i < 10; i++) {
+    print("oi");
+}

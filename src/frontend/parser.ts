@@ -23,6 +23,7 @@ import {
     CaseStmt,
     SwitchStmt,
     DefaultStmt,
+    ForStmt,
 } from "./ast";
 
 import { Token, TokenType } from "./tokenType";
@@ -225,6 +226,61 @@ export default class Parser {
         } as SwitchStmt;
     }
 
+    private parse_for(): ForStmt {
+        this.expect(TokenType.For, "Expecting 'for' keyword.");
+    
+        this.expect(TokenType.OpenParen, "Expecting '(' after 'for' keyword.");
+    
+        // Parse initialization
+        let initialization: VariableDeclaration | Expr | null = null;
+        if (this.at().type !== TokenType.Semi) {
+            initialization = this.parse_stmt() as VariableDeclaration | Expr;
+        }
+
+
+        // Parse condition
+        let condition: Expr | null = this.parse_for_condition();
+        this.expect(TokenType.Semi, "Expecting ';' after condition.");
+    
+        // Parse increment
+        let increment: Expr | null = null;
+        if (this.at().type !== TokenType.CloseParen) {
+            increment = this.parse_expr();
+        }
+        this.expect(TokenType.CloseParen, "Expecting ')' after increment.");
+    
+        const body = this.parse_block();
+    
+        return {
+            kind: "ForStmt",
+            initialization,
+            condition,
+            increment,
+            body,
+        } as ForStmt;
+    }
+
+    private parse_for_condition(): Expr | null {
+        if (this.at().type === TokenType.Identifier) {
+            const identifier = this.parse_identifier();
+            if (this.at().type === TokenType.LessThan) {
+                this.eat(); // consume '<'
+                const value = this.parse_expr();
+                return {
+                    kind: "BinaryExpr",
+                    left: identifier,
+                    right: value,
+                    operator: TokenType.LessThan,
+                } as BinaryExpr;
+            } else {
+                return identifier;
+            }
+        } else {
+            return null;
+        }
+    }
+    
+
     private parse_stmt(): Stmt {
         if (this.at().type === TokenType.int || this.at().type === TokenType.float || this.at().type === TokenType.bool || this.at().type === TokenType.char || this.at().type === TokenType.String) {
           const type =
@@ -276,7 +332,9 @@ export default class Parser {
           return this.parse_block();
         } else if (this.at().type === TokenType.Switch) {
             return this.parse_switch();
-        } 
+        } else if (this.at().type === TokenType.For) {
+            return this.parse_for();
+        }
       
         return this.parse_expr();
       }
@@ -344,16 +402,34 @@ export default class Parser {
             this.at().type === TokenType.Slash ||
             this.at().type === TokenType.Percent ||
             this.at().type === TokenType.StarEquals ||
-            this.at().type === TokenType.SlashEquals
+            this.at().type === TokenType.SlashEquals ||
+            this.at().type === TokenType.LessThan
         ) {
             const operator = this.eat().type;
-            const right = this.parse_primary_expr();
+            let right: Expr;
+    
+            if (
+                operator === TokenType.PlusPlus ||
+                operator === TokenType.MinusMinus
+            ) {
+                right = {
+                    kind: "UnaryExpr",
+                    operator,
+                } as Expr;
+            } else {
+                right = this.parse_multiplicative_expr();
+            }
+    
             left = {
                 kind: "BinaryExpr",
                 left,
                 right,
                 operator,
             } as BinaryExpr;
+    
+            if (this.at().type === TokenType.Semi) {
+                this.eat();
+            }
         }
 
         return left;

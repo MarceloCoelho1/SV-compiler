@@ -38,7 +38,9 @@ export enum TokenType  {
     Case,
     Default,
     Colon,
-    Break
+    Break,
+    For,
+    LessThan,
 }
 
 export type Token = {
