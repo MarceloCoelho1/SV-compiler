@@ -24,6 +24,7 @@ import {
     SwitchStmt,
     DefaultStmt,
     ForStmt,
+    DoubleLiteral,
 } from "./ast";
 
 import { Token, TokenType } from "./tokenType";
@@ -163,7 +164,8 @@ export default class Parser {
             this.at().type === TokenType.String ||
             this.at().type === TokenType.float ||
             this.at().type === TokenType.int ||
-            this.at().type === TokenType.char
+            this.at().type === TokenType.char ||
+            this.at().type === TokenType.Double
         ) {
             return {
                 kind: "Identifier",
@@ -282,13 +284,14 @@ export default class Parser {
     
 
     private parse_stmt(): Stmt {
-        if (this.at().type === TokenType.int || this.at().type === TokenType.float || this.at().type === TokenType.bool || this.at().type === TokenType.char || this.at().type === TokenType.String) {
+        if (this.at().type === TokenType.int || this.at().type === TokenType.float || this.at().type === TokenType.bool || this.at().type === TokenType.char || this.at().type === TokenType.String || this.at().type === TokenType.Double) {
           const type =
             this.at().type === TokenType.int ||
             this.at().type === TokenType.float ||
             this.at().type === TokenType.bool ||
             this.at().type === TokenType.char ||
-            this.at().type === TokenType.String
+            this.at().type === TokenType.String ||
+            this.at().type === TokenType.Double
               ? this.eat().type
               : null;
           const identifier = this.parse_identifier();
@@ -479,7 +482,11 @@ export default class Parser {
                     kind: "FloatLiteral",
                     value: parseFloat(this.eat().value)
                 } as FloatLiteral
-            
+            case TokenType.Double:
+                return {
+                    kind: "DoubleLiteral",
+                    value: parseFloat(this.eat().value)
+                } as DoubleLiteral
             case TokenType.MinusMinus:
             case TokenType.PlusPlus:
                 const operator = this.eat().type;

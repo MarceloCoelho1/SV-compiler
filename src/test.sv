@@ -16,7 +16,7 @@ char value = 'b';
 int num = 10;
 float num = 20.2;
 bool name = true;
-
+double dsa = 20.1;
 
 function sayHello(String name, int age) {
     print("Hello", name);

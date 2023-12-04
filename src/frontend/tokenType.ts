@@ -41,6 +41,7 @@ export enum TokenType  {
     Break,
     For,
     LessThan,
+    Double,
 }
 
 export type Token = {

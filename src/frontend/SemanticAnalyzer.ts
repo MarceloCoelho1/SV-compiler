@@ -44,24 +44,22 @@ export default class SemanticAnalyzer {
     private analyzeVariableDeclaration(declaration: VariableDeclaration): void {
         const identifier = declaration.identifier.symbol;
         const initializer = declaration.initializer;
-        
-
+    
         if (this.symbolTable.has(identifier)) {
             console.error(`Variable '${identifier}' is already declared.`);
             process.exit(1);
         }
-
+    
         if (!initializer) {
             console.error(`Variable '${identifier}' must be initialized.`);
             process.exit(1);
         }
-
-        if(initializer.kind === 'BinaryExpr') {
-            this.analyzeBinaryExpression(initializer as BinaryExpr)
-        }
-
-        this.symbolTable.set(identifier, TokenType.Identifier);
+    
+        // Atualize a tabela de símbolos com o tipo real do identificador
+        const initializerType = this.getType(initializer);
+        this.symbolTable.set(identifier, initializerType);
     }
+    
 
     private analyzeBinaryExpression(expr: BinaryExpr): NumericLiteral {
         if (expr.left.kind === 'BinaryExpr') {
@@ -74,7 +72,7 @@ export default class SemanticAnalyzer {
             expr.right = this.analyzeBinaryExpression(expr.right as BinaryExpr);
         }
 
-        if (expr.operator === '+') {
+        if (expr.operator == TokenType.Plus) {
             
             if (expr.left.kind !== 'NumericLiteral' || expr.right.kind !== 'NumericLiteral') {
                 console.error('Error: Is not a number.');
@@ -83,7 +81,7 @@ export default class SemanticAnalyzer {
                 let result: NumericLiteral = this.resolveBinaryExpr(expr.left, expr.right, expr.operator);
                 return result;
             }
-        } else if (expr.operator === '*') {
+        } else if (expr.operator === TokenType.Star) {
             
             if (expr.left.kind !== 'NumericLiteral' || expr.right.kind !== 'NumericLiteral') {
                 console.error('Error: Is not a number.');
@@ -92,7 +90,7 @@ export default class SemanticAnalyzer {
                 let result: NumericLiteral = this.resolveBinaryExpr(expr.left, expr.right, expr.operator);
                 return result;
             }
-        } else if(expr.operator === '-') {
+        } else if(expr.operator === TokenType.Minus) {
             if (expr.left.kind !== 'NumericLiteral' || expr.right.kind !== 'NumericLiteral') {
                 console.error('Error: Is not a number.');
                 process.exit();
@@ -101,7 +99,7 @@ export default class SemanticAnalyzer {
                 return result;
             }
             
-        } else if(expr.operator === '/') {
+        } else if(expr.operator === TokenType.Slash) {
             if (expr.left.kind !== 'NumericLiteral' || expr.right.kind !== 'NumericLiteral') {
                 console.error('Error: Is not a number.');
                 process.exit();
@@ -116,23 +114,23 @@ export default class SemanticAnalyzer {
     }
 
 
-    private resolveBinaryExpr(left: any, right: any, operator: string): NumericLiteral {
-        if (operator === '*') {
+    private resolveBinaryExpr(left: any, right: any, operator: TokenType): NumericLiteral {
+        if (operator === TokenType.Star) {
             return {
                 kind: 'NumericLiteral',
                 value: left.value * right.value
             } as NumericLiteral;
-        } else if (operator === '+') {
+        } else if (operator === TokenType.Plus) {
             return {
                 kind: 'NumericLiteral',
                 value: left.value + right.value
             } as NumericLiteral;
-        } else if(operator === '-') {
+        } else if(operator === TokenType.Minus) {
             return {
                 kind: "NumericLiteral",
                 value: left.value - right.value
             } as NumericLiteral;
-        } else if(operator === '/') {
+        } else if(operator === TokenType.Slash) {
             return {
                 kind: "NumericLiteral",
                 value: left.value / right.value

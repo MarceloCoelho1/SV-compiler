@@ -80,7 +80,11 @@ export default function tokenize(sourceCode: string): Token[] {
           while (src.length > 0 && NUMBERS.test(src[0])) {
             num += src.shift();
           }
-          tokens.push(token(num, TokenType.float));
+          if (tokens[tokens.length - 3].type == TokenType.float) {
+            tokens.push(token(num, TokenType.float));
+          } else {
+            tokens.push(token(num, TokenType.Double))
+          }
         } else {
           tokens.push(token(num, TokenType.Number));
         }
@@ -162,15 +166,17 @@ export default function tokenize(sourceCode: string): Token[] {
 
         if (TYPES.includes(ident)) {
           if (ident == 'String') {
-            tokens.push(token(ident, TokenType.String))
+            tokens.push(token(ident, TokenType.String));
           } else if (ident == 'int') {
-            tokens.push(token(ident, TokenType.int))
+            tokens.push(token(ident, TokenType.int));
           } else if (ident == 'float') {
-            tokens.push(token(ident, TokenType.float))
+            tokens.push(token(ident, TokenType.float));
           } else if (ident == 'char') {
-            tokens.push(token(ident, TokenType.char))
+            tokens.push(token(ident, TokenType.char));
           } else if (ident == 'bool') {
-            tokens.push(token(ident, TokenType.bool))
+            tokens.push(token(ident, TokenType.bool));
+          } else if (ident == 'double') {
+            tokens.push(token(ident, TokenType.Double));
           }
         } else {
           const reserved = reservedKeyword(ident);

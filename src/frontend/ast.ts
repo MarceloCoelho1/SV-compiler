@@ -22,7 +22,8 @@ export type NodeType =
   | "CaseStmt"
   | "DefaultStmt"
   | "CloseCurlyBrace"
-  | "ForStmt" // Adicionando SwitchStmt ao tipo NodeType
+  | "ForStmt"
+  | "DoubleLiteral"
 
 /**
  * Statements do not result in a value at runtime.
@@ -80,6 +81,11 @@ export interface NumericLiteral extends Expr {
 
 export interface FloatLiteral extends Expr {
   kind: "FloatLiteral";
+  value: number;
+}
+
+export interface DoubleLiteral extends Expr {
+  kind: "DoubleLiteral";
   value: number;
 }
 
