@@ -265,7 +265,7 @@ export default class Parser {
     private parse_for_condition(): Expr | null {
         if (this.at().type === TokenType.Identifier) {
             const identifier = this.parse_identifier();
-            if (this.at().type === TokenType.LessThan) {
+            if (this.at().type === TokenType.LessThan || this.at().type === TokenType.GreaterThan) {
                 this.eat(); // consume '<'
                 const value = this.parse_expr();
                 return {
@@ -284,6 +284,7 @@ export default class Parser {
     
 
     private parse_stmt(): Stmt {
+        console.log(this.tokens[0])
         if (this.at().type === TokenType.int || this.at().type === TokenType.float || this.at().type === TokenType.bool || this.at().type === TokenType.char || this.at().type === TokenType.String || this.at().type === TokenType.Double) {
           const type =
             this.at().type === TokenType.int ||
@@ -295,6 +296,9 @@ export default class Parser {
               ? this.eat().type
               : null;
           const identifier = this.parse_identifier();
+            
+          
+
           if (this.at().value === "=") {
             this.eat();
             const initializer = this.parse_expr();
@@ -337,6 +341,9 @@ export default class Parser {
             return this.parse_switch();
         } else if (this.at().type === TokenType.For) {
             return this.parse_for();
+        } else if (this.at().type === TokenType.CommentLine) {
+            this.eat();
+            return { kind: "Semicolon" };
         }
       
         return this.parse_expr();

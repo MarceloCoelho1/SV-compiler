@@ -16,7 +16,7 @@ char value = 'b';
 int num = 10;
 float num = 20.2;
 bool name = true;
-double dsa = 20.1;
+double dsa = 220.1123;
 
 function sayHello(String name, int age) {
     print("Hello", name);
@@ -25,6 +25,25 @@ function sayHello(String name, int age) {
 
 sayHello("Marcelo", 19);
 
-for (int i = 0; i < 10; i++) {
+for (int i = 0; i > 10; i++) {
+    i--;
     print("oi");
 }
+
+function hello(String word, bool state, double value) {
+  exit();
+  print("Hello", word);
+  print("state: ", state);
+  print("value: ", value);
+
+  return;
+}
+
+
+if( i < 10) {
+  print("é menor");
+} else {
+  print("é maior ou igual");
+}
+
+// na vida tudo depende

@@ -42,6 +42,8 @@ export enum TokenType  {
     For,
     LessThan,
     Double,
+    GreaterThan,
+    CommentLine,
 }
 
 export type Token = {

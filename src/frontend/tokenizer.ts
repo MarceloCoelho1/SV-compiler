@@ -3,6 +3,7 @@ import { Token, TokenType } from "./tokenType";
 const LETTER = /[a-zA-Z]/
 const WHITESPACE = /[\n\t ]/
 const NUMBERS = /[0-9]/
+const PUNCTUATION = /\p{P}/u;
 const TYPES = ['bool', 'int', 'char', 'double', 'String', 'float'];
 
 function token(value = "", type: TokenType): Token {
@@ -51,8 +52,6 @@ export default function tokenize(sourceCode: string): Token[] {
       tokens.push(token(src.shift(), TokenType.Minus));
     } else if (src[0] === "*") {
       tokens.push(token(src.shift(), TokenType.Star));
-    } else if (src[0] === "/") {
-      tokens.push(token(src.shift(), TokenType.Slash));
     } else if (src[0] === "%") {
       tokens.push(token(src.shift(), TokenType.Percent));
     } else if (src[0] === "=") {
@@ -65,6 +64,8 @@ export default function tokenize(sourceCode: string): Token[] {
       tokens.push(token(src.shift(), TokenType.Colon));
     } else if (src[0] === "<") {
       tokens.push(token(src.shift(), TokenType.LessThan));
+    } else if(src[0] === '>') {
+     tokens.push(token(src.shift(), TokenType.GreaterThan)); 
     } else {
       if (NUMBERS.test(src[0])) {
         let num = "";
@@ -74,13 +75,15 @@ export default function tokenize(sourceCode: string): Token[] {
           num += src.shift();
         }
 
+        
         // Parte decimal (se houver)
         if (src[0] === '.') {
           num += src.shift();
           while (src.length > 0 && NUMBERS.test(src[0])) {
             num += src.shift();
           }
-          if (tokens[tokens.length - 3].type == TokenType.float) {
+         
+          if (num.length < 32) {
             tokens.push(token(num, TokenType.float));
           } else {
             tokens.push(token(num, TokenType.Double))
@@ -88,7 +91,15 @@ export default function tokenize(sourceCode: string): Token[] {
         } else {
           tokens.push(token(num, TokenType.Number));
         }
-      } else if (src.join('').startsWith('function')) {
+      } else if (src[0] === '/' && src[1] === '/') {
+          src.shift();
+          src.shift();
+          let comment = "";
+          while (src.length > 0 && !src[0].match(/[\n\r]/)) {
+            comment += src.shift();
+          }
+          tokens.push(token(comment, TokenType.CommentLine));
+        }else if (src.join('').startsWith('function')) {
         while (src.length > 0 && LETTER.test(src[0])) {
           src.shift();
         }
@@ -135,7 +146,7 @@ export default function tokenize(sourceCode: string): Token[] {
         tokens.push(token('default', TokenType.Default));
       } else if (src[0] === "'") {
         const quote = src.shift();
-        const charValue = src.shift(); // Obtenha o caractere entre as aspas simples
+        const charValue = src.shift(); 
 
         if (src[0] !== quote) {
           console.error("not a char: ", charValue);
@@ -144,7 +155,7 @@ export default function tokenize(sourceCode: string): Token[] {
 
         tokens.push(token(charValue, TokenType.char));
 
-        src.shift(); // Consome a aspa de fechamento
+        src.shift(); 
       } else if (src[0] === '"') {
         const quote = src.shift();
         let ident = "";
@@ -152,7 +163,7 @@ export default function tokenize(sourceCode: string): Token[] {
           ident += src.shift();
         }
         if (src[0] === quote) {
-          src.shift(); // Consume the closing quote
+          src.shift(); 
           tokens.push(token(ident, TokenType.String));
         } else {
           console.error("Unterminated string literal.");
@@ -177,6 +188,8 @@ export default function tokenize(sourceCode: string): Token[] {
             tokens.push(token(ident, TokenType.bool));
           } else if (ident == 'double') {
             tokens.push(token(ident, TokenType.Double));
+          } else if (src[0] === "/") {
+              tokens.push(token(src.shift(), TokenType.Slash));
           }
         } else {
           const reserved = reservedKeyword(ident);
