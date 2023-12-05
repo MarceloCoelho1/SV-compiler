@@ -47,3 +47,5 @@ if( i < 10) {
 }
 
 // na vida tudo depende
+
+int numbers[] = [10, 20, 30];

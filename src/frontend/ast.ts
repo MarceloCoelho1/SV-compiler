@@ -24,6 +24,7 @@ export type NodeType =
   | "CloseCurlyBrace"
   | "ForStmt"
   | "DoubleLiteral"
+  | "VectorDeclaration"
 
 /**
  * Statements do not result in a value at runtime.
@@ -66,6 +67,14 @@ export interface Identifier extends Expr {
   symbol: string;
 }
 
+export interface VectorDeclaration extends Stmt {
+ kind: "VectorDeclaration";
+ identifier: Identifier;
+ type: TokenType;
+ initializer: [] | null;
+ isArray: boolean;
+}
+
 export interface _return extends Stmt {
   kind: '_return';
   expression: Expr | null;
@@ -90,10 +99,11 @@ export interface DoubleLiteral extends Expr {
 }
 
 export interface VariableDeclaration extends Stmt {
-  kind: "VariableDeclaration";
-  identifier: Identifier;
-  type: TokenType | null;
-  initializer: Expr | null;
+    kind: "VariableDeclaration";
+    identifier: Identifier;
+    type: TokenType | null;
+    initializer: Expr | null;
+    isArray: boolean;
 }
 
 export interface String extends Stmt {
@@ -152,7 +162,7 @@ export interface UnaryExpr {
   operator: TokenType.PlusPlus | TokenType.MinusMinus;
 }
 
-// Adicionando a definição para SwitchStmt
+
 export interface SwitchStmt extends Stmt {
   kind: "SwitchStmt";
   expression: Expr;

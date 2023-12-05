@@ -10,6 +10,9 @@ function token(value = "", type: TokenType): Token {
   return { value, type };
 }
 
+function isSquareBracket(char: string): boolean {
+  return char === "[" || char === "]";
+}
 
 function reservedKeyword(reserved: string): boolean {
   const keywords = ['sv', 'if', 'else', 'while', 'function', 'return'];
@@ -22,7 +25,9 @@ export default function tokenize(sourceCode: string): Token[] {
   let src = sourceCode.split("");
 
   while (src.length > 0) {
-    if (src[0] === "(") {
+    if (isSquareBracket(src[0])) {
+      tokens.push(token(src.shift(), isSquareBracket(src[0]) ? TokenType.OpenBracket : TokenType.CloseBracket));
+    }else if (src[0] === "(") {
       tokens.push(token(src.shift(), TokenType.OpenParen));
     } else if (src[0] === ")") {
       tokens.push(token(src.shift(), TokenType.CloseParen));
@@ -83,7 +88,7 @@ export default function tokenize(sourceCode: string): Token[] {
             num += src.shift();
           }
          
-          if (num.length < 32) {
+          if (num.length < 3) {
             tokens.push(token(num, TokenType.float));
           } else {
             tokens.push(token(num, TokenType.Double))

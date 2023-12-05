@@ -25,6 +25,7 @@ import {
     DefaultStmt,
     ForStmt,
     DoubleLiteral,
+    VectorDeclaration
 } from "./ast";
 
 import { Token, TokenType } from "./tokenType";
@@ -134,7 +135,7 @@ export default class Parser {
         while (this.at().type !== TokenType.CloseParen) {
             parameters.push({
                 kind: "Parameter",
-                identifier: this.parse_function_declartion_parameters(),
+                identifier: this.parse_function_declaration_parameters(),
             });
 
             if (this.at().type === TokenType.Comma) {
@@ -157,26 +158,27 @@ export default class Parser {
         };
     }
 
-    private parse_function_declartion_parameters(): Identifier {
-
-        if(
-            this.at().type === TokenType.bool || 
+    private parse_function_declaration_parameters(): Identifier {
+        if (
+            this.at().type === TokenType.bool ||
             this.at().type === TokenType.String ||
             this.at().type === TokenType.float ||
             this.at().type === TokenType.int ||
             this.at().type === TokenType.char ||
             this.at().type === TokenType.Double
         ) {
+            const type = this.eat().type;
+            const symbol = this.expect(TokenType.Identifier, "Expecting an identifier after the type.").value;
+
             return {
                 kind: "Identifier",
-                type: this.eat().type,
-                symbol: this.eat().value,
+                type,
+                symbol,
             } as Identifier;
         } else {
-            console.error("Parameter variable type is not correct", this.at().value) 
-            process.exit()
+            console.error("Parameter variable type is not correct", this.at().value);
+            process.exit();
         }
-        
     }
 
     private parse_switch(): SwitchStmt {
@@ -284,7 +286,6 @@ export default class Parser {
     
 
     private parse_stmt(): Stmt {
-        console.log(this.tokens[0])
         if (this.at().type === TokenType.int || this.at().type === TokenType.float || this.at().type === TokenType.bool || this.at().type === TokenType.char || this.at().type === TokenType.String || this.at().type === TokenType.Double) {
           const type =
             this.at().type === TokenType.int ||
@@ -296,9 +297,8 @@ export default class Parser {
               ? this.eat().type
               : null;
           const identifier = this.parse_identifier();
-            
-          
 
+            
           if (this.at().value === "=") {
             this.eat();
             const initializer = this.parse_expr();
@@ -313,7 +313,31 @@ export default class Parser {
               type,
               initializer,
             } as VariableDeclaration;
-          } else {
+          } if (this.at().type === TokenType.OpenBracket) {
+             this.eat();
+
+             this.expect(TokenType.CloseBracket, "Expecting ']' to end the array declaration.");
+             this.eat();
+             this.eat();
+             let arrayElements = [];
+             while(this.at().type !== TokenType.CloseBracket) {
+                if(this.at().value == ',') {
+                    this.eat();
+                }
+                const element = this.eat().value;
+                arrayElements.push(element);
+             }
+             this.expect(TokenType.CloseBracket, "Expecting ']' to end the array declaration.");
+             return {
+               kind: "VectorDeclaration",
+               identifier,
+               type,
+               isArray: true,
+               initializer: arrayElements, 
+             } as VectorDeclaration;
+            } 
+
+          else {
             if (this.at().type !== TokenType.Semi) {
               console.error("Invalid syntax, missing Semicolon symbol");
               process.exit();
@@ -472,6 +496,7 @@ export default class Parser {
         switch (tk) {
             case TokenType.Identifier:
                 const identifier = this.parse_identifier();
+
 
                 if (this.at().type === TokenType.OpenParen) {
                     return this.parse_function_call(identifier);

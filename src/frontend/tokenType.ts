@@ -44,6 +44,8 @@ export enum TokenType  {
     Double,
     GreaterThan,
     CommentLine,
+    OpenBracket,
+    CloseBracket,
 }
 
 export type Token = {
